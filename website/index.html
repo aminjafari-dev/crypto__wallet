@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MetaMask Functions</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div>
+    <button id="connectButton">Connect MetaMask</button>
+    <button id="switchChainButton">Switch Chain</button>
+    <button id="exportTokensButton">Export Tokens</button>
+    <button id="fetchTokensButton">Fetch All Tokens</button>
+
+    <div id="walletAddress"></div>
+
+    <div id="currentChain"></div>
+
+    <div id="tokenBalances">
+      <h3>Wallet Tokens:</h3>
+      <ul id="tokenList"></ul>
+    </div>
+    
+  </div>
+
+
+  
+  <script src="connectWallet.js" type="module"></script>
+  <script src="switchChain.js" type="module"></script>
+  <script src="fetchTokens.js" type="module"></script>
+  <script src="dynamicTokens.js" type="module"></script>
+  
+</body>
+</html>
