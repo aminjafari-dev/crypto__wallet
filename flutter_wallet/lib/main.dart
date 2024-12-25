@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_wallet/services/api_service.dart';
+import 'package:flutter_wallet/screens/wellcome/wellcome_page.dart';
 import 'package:flutter_wallet/services/ethereum_service.dart';
 import 'package:flutter_wallet/services/wallet_service.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(primarySwatch: Colors.blue),
-        home: HomeScreen(),
+        home: OnboardingScreen(),
       ),
     );
   }
