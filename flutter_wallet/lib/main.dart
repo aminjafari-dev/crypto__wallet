@@ -1,125 +1,269 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_wallet/services/api_service.dart';
+import 'package:flutter_wallet/services/ethereum_service.dart';
+import 'package:flutter_wallet/services/wallet_service.dart';
+import 'package:provider/provider.dart';
 
+// Main Entry Point
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
+        ChangeNotifierProvider(create: (_) => CurrencyConversionProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: HomeScreen(),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
+// Home Screen
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
+  final ethereumService = EthereumService(
+      "https://base-mainnet.g.alchemy.com/v2/kDPMGfNynLb-uJDyPm2qEclRiZ5IM40g");
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text('Crypto Wallet')),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final wallet = await WalletService().createWallet();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Wallet created successfully')),
+                  );
+                  print(wallet);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              },
+              child: Text('Create Wallet'),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            ElevatedButton(
+              onPressed: () {
+                ethereumService
+                    .getBalance('0xd7a2bf19ee5989849eb088e6009c1331e2548239');
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => ImportWalletScreen()),
+                // );
+              },
+              child: Text('Import Wallet'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TransactionScreen()),
+                );
+              },
+              child: Text('Transactions'),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+}
+
+// Create Wallet Screen
+class CreateWalletScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final walletProvider = Provider.of<WalletProvider>(context);
+    return Scaffold(
+      appBar: AppBar(title: Text('Create Wallet')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Your Seed Phrase:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            SelectableText(
+                walletProvider.seedPhrase ?? 'No seed generated yet.'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                walletProvider.generateSeedPhrase();
+              },
+              child: Text('Generate Seed Phrase'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Import Wallet Screen
+class ImportWalletScreen extends StatelessWidget {
+  final TextEditingController _seedPhraseController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final walletProvider = Provider.of<WalletProvider>(context);
+    return Scaffold(
+      appBar: AppBar(title: Text('Import Wallet')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _seedPhraseController,
+              decoration: InputDecoration(labelText: 'Seed Phrase'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                walletProvider.importWallet(_seedPhraseController.text);
+              },
+              child: Text('Import Wallet'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Transaction Screen
+class TransactionScreen extends StatelessWidget {
+  final TextEditingController _amountController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    final conversionProvider = Provider.of<CurrencyConversionProvider>(context);
+    final walletProvider = Provider.of<WalletProvider>(context);
+    return Scaffold(
+      appBar: AppBar(title: Text('Transaction')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _amountController,
+              decoration: InputDecoration(labelText: 'Amount'),
+              keyboardType: TextInputType.number,
+            ),
+            DropdownButton<String>(
+              value: conversionProvider.selectedCurrency,
+              items: ['USD', 'IRR'].map((currency) {
+                return DropdownMenuItem(value: currency, child: Text(currency));
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) conversionProvider.setCurrency(value);
+              },
+            ),
+            SizedBox(height: 10),
+            Text(
+                'Equivalent: ${conversionProvider.convertedAmount} ${conversionProvider.targetCurrency}'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.qr_code),
+                        title: Text('Show QR Code'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              content: Text('QR Code Placeholder'),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.copy),
+                        title: Text('Copy Address'),
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(
+                              text: walletProvider.walletAddress));
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: Text('Send'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    content: Text('QR Code Placeholder'),
+                  ),
+                );
+              },
+              child: Text('Receive'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Wallet Provider
+class WalletProvider extends ChangeNotifier {
+  String? seedPhrase;
+  String walletAddress = "0x123456789abcdef"; // Placeholder
+
+  void generateSeedPhrase() {
+    seedPhrase = 'sample-seed-phrase';
+    notifyListeners();
+  }
+
+  void importWallet(String seed) {
+    seedPhrase = seed;
+    notifyListeners();
+  }
+}
+
+// Currency Conversion Provider
+class CurrencyConversionProvider extends ChangeNotifier {
+  String selectedCurrency = 'USD';
+  double convertedAmount = 0.0;
+  String targetCurrency = 'IRR';
+
+  void setCurrency(String currency) {
+    selectedCurrency = currency;
+    targetCurrency = (currency == 'USD') ? 'IRR' : 'USD';
+    notifyListeners();
+  }
+
+  void convertAmount(double amount) {
+    convertedAmount = (selectedCurrency == 'USD')
+        ? amount * 42000
+        : amount / 42000; // Placeholder conversion rate
+    notifyListeners();
   }
 }

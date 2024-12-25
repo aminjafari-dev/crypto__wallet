@@ -13,11 +13,13 @@
 
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from crypto_wallet import CryptoWallet  # Add this import
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS
 rpc_url = "https://base-mainnet.g.alchemy.com/v2/kDPMGfNynLb-uJDyPm2qEclRiZ5IM40g"  # Alchemy Base Mainnet RPC URL
 wallet_service = CryptoWallet(rpc_url)
 
@@ -49,7 +51,7 @@ def send_tokens():
         return jsonify({'error': str(e)}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5005)
 
 
 
